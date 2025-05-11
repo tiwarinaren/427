@@ -273,9 +273,40 @@ document.addEventListener('DOMContentLoaded', () => {
         numberCue.classList.add('number-fade-in');
     }
     
-    // Start breathing cycle immediately (no need to wait for gesture)
-    startBreathingCycle();
-    
+    // --- Add Start Button for Guaranteed Audio on All Browsers ---
+    // Create and insert the start button overlay
+    const startOverlay = document.createElement('div');
+    startOverlay.id = 'startOverlay';
+    startOverlay.style.position = 'fixed';
+    startOverlay.style.top = 0;
+    startOverlay.style.left = 0;
+    startOverlay.style.width = '100vw';
+    startOverlay.style.height = '100vh';
+    startOverlay.style.background = 'rgba(247,249,255,0.98)';
+    startOverlay.style.display = 'flex';
+    startOverlay.style.flexDirection = 'column';
+    startOverlay.style.alignItems = 'center';
+    startOverlay.style.justifyContent = 'center';
+    startOverlay.style.zIndex = 9999;
+    startOverlay.innerHTML = `
+        <button id="startAppBtn" style="font-size:2rem;padding:1rem 2.5rem;border-radius:2rem;background:#b7d3ff;color:#1f2937;border:none;box-shadow:0 2px 8px #b7d3ff80;cursor:pointer;">Start</button>
+        <div style="margin-top:1.5rem;color:#4b5563;font-size:1.1rem;">Tap to begin and enable sound</div>
+    `;
+    document.body.appendChild(startOverlay);
+
+    // Pause breathing cycle until user taps Start
+    let breathingStarted = false;
+    function startBreathingWithAudioUnlock() {
+        if (breathingStarted) return;
+        breathingStarted = true;
+        robustPreloadAndUnlockAudio();
+        startBreathingCycle();
+        startOverlay.style.display = 'none';
+    }
+    document.getElementById('startAppBtn').addEventListener('click', startBreathingWithAudioUnlock);
+    // Prevent auto-start
+    // Remove or comment out: startBreathingCycle();
+
     // Handle visibility change to pause/resume when app is in background
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
