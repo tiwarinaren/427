@@ -99,25 +99,35 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Unlock audio context on first user gesture
-    function unlockAudio() {
+    // Unlock audio context on first user gesture OR as soon as possible (best effort)
+    function unlockAudioSilently() {
         [softbeepAudio, inhaleAudio, holdAudio, exhaleAudio].forEach(audio => {
             if (audio && audio.paused) {
+                const originalVolume = audio.volume;
                 audio.volume = 0;
-                audio.play().then(() => { audio.pause(); audio.currentTime = 0; audio.volume = 1; }).catch(() => {});
+                audio.play().then(() => {
+                    audio.pause();
+                    audio.currentTime = 0;
+                    audio.volume = originalVolume;
+                }).catch(() => {
+                    audio.volume = originalVolume;
+                });
             }
         });
     }
 
-    // Attach to any user gesture
-    document.body.addEventListener('touchstart', unlockAudio, { once: true });
-    document.body.addEventListener('mousedown', unlockAudio, { once: true });
+    // Try to unlock audio as soon as possible
+    setTimeout(unlockAudioSilently, 100);
+    document.addEventListener('DOMContentLoaded', unlockAudioSilently);
+    window.addEventListener('load', unlockAudioSilently);
+    // Also keep the user gesture fallback for reliability
+    document.body.addEventListener('touchstart', unlockAudioSilently, { once: true });
+    document.body.addEventListener('mousedown', unlockAudioSilently, { once: true });
     preloadAllAudio();
 
     // Toggle between voice and beep audio
     toggleAudioBtn.addEventListener('click', () => {
         isVoiceMode = !isVoiceMode;
-        
         if (isVoiceMode) {
             audioIcon.textContent = '🔊';
             audioText.textContent = 'Voice';
@@ -145,6 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     break;
             }
         } else {
+            // Always play beep for every phase in beep mode
             audioToPlay = softbeepAudio;
         }
         if (audioToPlay) {
@@ -253,7 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
         numberCue.classList.add('number-fade-in');
     }
     
-    // Start the breathing cycle when the page loads
+    // Start breathing cycle immediately (no need to wait for gesture)
     startBreathingCycle();
     
     // Handle visibility change to pause/resume when app is in background
