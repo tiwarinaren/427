@@ -99,23 +99,21 @@ document.addEventListener('DOMContentLoaded', () => {
             // Try to unlock audio context silently
             const originalVolume = audio.volume;
             audio.volume = 0;
-            const playPromise = audio.play();
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    audio.pause();
-                    audio.currentTime = 0;
-                    audio.volume = originalVolume;
-                }).catch(() => {
-                    audio.volume = originalVolume;
-                });
-            } else {
+            // Try to play, but do NOT block or wait for promise
+            audio.play().then(() => {
+                audio.pause();
+                audio.currentTime = 0;
                 audio.volume = originalVolume;
-            }
+            }).catch(() => {
+                audio.volume = originalVolume;
+            });
         });
     }
     // Call robust preload/unlock on DOMContentLoaded and load
     document.addEventListener('DOMContentLoaded', robustPreloadAndUnlockAudio);
     window.addEventListener('load', robustPreloadAndUnlockAudio);
+    // Also call immediately in case DOM is already loaded
+    robustPreloadAndUnlockAudio();
 
     // Toggle between voice and beep audio
     toggleAudioBtn.addEventListener('click', () => {
@@ -154,15 +152,29 @@ document.addEventListener('DOMContentLoaded', () => {
             audioToPlay.currentTime = 0;
             // Always reload for iOS reliability
             audioToPlay.load();
-            const playPromise = audioToPlay.play();
-            if (playPromise !== undefined) {
-                playPromise.catch(error => {
-                    // Retry after a short delay if failed
-                    setTimeout(() => {
-                        audioToPlay.load();
-                        audioToPlay.play().catch(() => {});
-                    }, 120);
-                });
+            // Special fix: For inhale, force a slightly longer delay before play
+            if (phase === 'inhale') {
+                setTimeout(() => {
+                    const playPromise = audioToPlay.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(error => {
+                            setTimeout(() => {
+                                audioToPlay.load();
+                                audioToPlay.play().catch(() => {});
+                            }, 120);
+                        });
+                    }
+                }, 120); // Delay to ensure iOS loads the file
+            } else {
+                const playPromise = audioToPlay.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(error => {
+                        setTimeout(() => {
+                            audioToPlay.load();
+                            audioToPlay.play().catch(() => {});
+                        }, 120);
+                    });
+                }
             }
         }
     }
