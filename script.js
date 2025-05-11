@@ -258,30 +258,32 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // --- Add Start Button for Guaranteed Audio on All Browsers ---
-    // Create and insert the start button overlay
-    const startOverlay = document.createElement('div');
-    startOverlay.id = 'startOverlay';
-    startOverlay.style.position = 'fixed';
-    startOverlay.style.top = 0;
-    startOverlay.style.left = 0;
-    startOverlay.style.width = '100vw';
-    startOverlay.style.height = '100vh';
-    startOverlay.style.background = 'rgba(247,249,255,0.98)';
-    startOverlay.style.display = 'flex';
-    startOverlay.style.flexDirection = 'column';
-    startOverlay.style.alignItems = 'center';
-    startOverlay.style.justifyContent = 'center';
-    startOverlay.style.zIndex = 9999;
-    startOverlay.innerHTML = `
-        <button id="startAppBtn" style="font-size:2rem;padding:1rem 2.5rem;border-radius:2rem;background:#b7d3ff;color:#1f2937;border:none;box-shadow:0 2px 8px #b7d3ff80;cursor:pointer;">Start</button>
-        <div style="margin-top:1.5rem;color:#4b5563;font-size:1.1rem;">Tap to begin and enable sound</div>
-    `;
-    document.body.appendChild(startOverlay);
+    // Create and insert the start button overlay ONLY if not already present
+    let startOverlay = document.getElementById('startOverlay');
+    if (!startOverlay) {
+        startOverlay = document.createElement('div');
+        startOverlay.id = 'startOverlay';
+        startOverlay.style.position = 'fixed';
+        startOverlay.style.top = 0;
+        startOverlay.style.left = 0;
+        startOverlay.style.width = '100vw';
+        startOverlay.style.height = '100vh';
+        startOverlay.style.background = 'rgba(247,249,255,0.98)';
+        startOverlay.style.display = 'flex';
+        startOverlay.style.flexDirection = 'column';
+        startOverlay.style.alignItems = 'center';
+        startOverlay.style.justifyContent = 'center';
+        startOverlay.style.zIndex = 9999;
+        startOverlay.innerHTML = `
+            <button id="startAppBtn" style="font-size:2rem;padding:1rem 2.5rem;border-radius:2rem;background:#b7d3ff;color:#1f2937;border:none;box-shadow:0 2px 8px #b7d3ff80;cursor:pointer;">Start</button>
+            <div style="margin-top:1.5rem;color:#4b5563;font-size:1.1rem;">Tap to begin and enable sound</div>
+        `;
+        document.body.appendChild(startOverlay);
+    }
 
-    // Only allow Start button logic after DOM is fully ready and all elements are present
-    function setupStartOverlayHandler() {
-        const startBtn = document.getElementById('startAppBtn');
-        if (!startBtn) return;
+    // Setup Start button handler
+    const startBtn = document.getElementById('startAppBtn');
+    if (startBtn) {
         let breathingStarted = false;
         function hideStartOverlay() {
             startOverlay.style.display = 'none';
@@ -295,12 +297,6 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(startBreathingCycle, 100); // Give audio unlock a moment
         }
         startBtn.addEventListener('click', startBreathingWithAudioUnlock);
-    }
-    // Wait for DOMContentLoaded to ensure #startAppBtn exists
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', setupStartOverlayHandler);
-    } else {
-        setupStartOverlayHandler();
     }
 
     // Handle visibility change to pause/resume when app is in background
