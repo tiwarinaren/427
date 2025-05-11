@@ -150,31 +150,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (audioToPlay) {
             audioToPlay.pause();
             audioToPlay.currentTime = 0;
-            // Always reload for iOS reliability
             audioToPlay.load();
-            // Special fix: For inhale, force a slightly longer delay before play
-            if (phase === 'inhale') {
-                setTimeout(() => {
-                    const playPromise = audioToPlay.play();
-                    if (playPromise !== undefined) {
-                        playPromise.catch(error => {
-                            setTimeout(() => {
-                                audioToPlay.load();
-                                audioToPlay.play().catch(() => {});
-                            }, 120);
-                        });
-                    }
-                }, 120); // Delay to ensure iOS loads the file
-            } else {
-                const playPromise = audioToPlay.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch(error => {
-                        setTimeout(() => {
-                            audioToPlay.load();
-                            audioToPlay.play().catch(() => {});
-                        }, 120);
-                    });
-                }
+            const playPromise = audioToPlay.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    setTimeout(() => {
+                        audioToPlay.load();
+                        audioToPlay.play().catch(() => {});
+                    }, 120);
+                });
             }
         }
     }
