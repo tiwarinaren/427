@@ -5,10 +5,10 @@ const urlsToCache = [
   '/styles.css',
   '/script.js',
   '/manifest.json',
-  '/audio/softbeep.mp3',
-  '/audio/inhale.mp3',
-  '/audio/hold.mp3',
-  '/audio/exhale.mp3',
+  '/assets/softbeep.mp3',
+  '/assets/inhale.mp3',
+  '/assets/hold.mp3',
+  '/assets/exhale.mp3',
   'https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css'
 ];
 
