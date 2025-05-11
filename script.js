@@ -280,14 +280,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Pause breathing cycle until user taps Start
     let breathingStarted = false;
+
+    // Hide the overlay visually and from screen readers
+    function hideStartOverlay() {
+        startOverlay.style.display = 'none';
+        startOverlay.setAttribute('aria-hidden', 'true');
+    }
+
     function startBreathingWithAudioUnlock() {
         if (breathingStarted) return;
         breathingStarted = true;
         robustPreloadAndUnlockAudio();
+        hideStartOverlay();
         startBreathingCycle();
-        startOverlay.style.display = 'none';
     }
     document.getElementById('startAppBtn').addEventListener('click', startBreathingWithAudioUnlock);
+
     // Prevent auto-start
     // Remove or comment out: startBreathingCycle();
 
