@@ -89,41 +89,33 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('breathenTheme', 'light');
     }
     
-    // Preload and unlock all audio on first user interaction (for iOS/PWA)
-    function preloadAllAudio() {
-        [softbeepAudio, inhaleAudio, holdAudio, exhaleAudio].forEach(audio => {
-            if (audio) {
-                audio.load();
-                audio.preload = 'auto';
-            }
-        });
-    }
-
-    // Unlock audio context on first user gesture OR as soon as possible (best effort)
-    function unlockAudioSilently() {
-        [softbeepAudio, inhaleAudio, holdAudio, exhaleAudio].forEach(audio => {
-            if (audio && audio.paused) {
-                const originalVolume = audio.volume;
-                audio.volume = 0;
-                audio.play().then(() => {
+    // --- Robust Audio Unlock and Preload (modeled after New Folder (2)) ---
+    function robustPreloadAndUnlockAudio() {
+        const audioElements = [softbeepAudio, inhaleAudio, holdAudio, exhaleAudio];
+        audioElements.forEach(audio => {
+            if (!audio) return;
+            audio.load();
+            audio.preload = 'auto';
+            // Try to unlock audio context silently
+            const originalVolume = audio.volume;
+            audio.volume = 0;
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
                     audio.pause();
                     audio.currentTime = 0;
                     audio.volume = originalVolume;
                 }).catch(() => {
                     audio.volume = originalVolume;
                 });
+            } else {
+                audio.volume = originalVolume;
             }
         });
     }
-
-    // Try to unlock audio as soon as possible
-    setTimeout(unlockAudioSilently, 100);
-    document.addEventListener('DOMContentLoaded', unlockAudioSilently);
-    window.addEventListener('load', unlockAudioSilently);
-    // Also keep the user gesture fallback for reliability
-    document.body.addEventListener('touchstart', unlockAudioSilently, { once: true });
-    document.body.addEventListener('mousedown', unlockAudioSilently, { once: true });
-    preloadAllAudio();
+    // Call robust preload/unlock on DOMContentLoaded and load
+    document.addEventListener('DOMContentLoaded', robustPreloadAndUnlockAudio);
+    window.addEventListener('load', robustPreloadAndUnlockAudio);
 
     // Toggle between voice and beep audio
     toggleAudioBtn.addEventListener('click', () => {
@@ -139,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    // Play the appropriate audio based on the current mode
+    // --- Robust Play Function (modeled after New Folder (2)) ---
     function playAudio(phase) {
         let audioToPlay;
         if (isVoiceMode) {
@@ -155,16 +147,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     break;
             }
         } else {
-            // Always play beep for every phase in beep mode
             audioToPlay = softbeepAudio;
         }
         if (audioToPlay) {
             audioToPlay.pause();
             audioToPlay.currentTime = 0;
+            // Always reload for iOS reliability
+            audioToPlay.load();
             const playPromise = audioToPlay.play();
             if (playPromise !== undefined) {
                 playPromise.catch(error => {
-                    setTimeout(() => { audioToPlay.play().catch(() => {}); }, 100);
+                    // Retry after a short delay if failed
+                    setTimeout(() => {
+                        audioToPlay.load();
+                        audioToPlay.play().catch(() => {});
+                    }, 120);
                 });
             }
         }
