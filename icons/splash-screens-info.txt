@@ -1,0 +1,11 @@
+Create the following splash screen images for iOS devices:
+
+1. splash-640x1136.png - iPhone 5, SE (1st gen)
+2. splash-750x1334.png - iPhone 6, 7, 8
+3. splash-1242x2208.png - iPhone 6+, 7+, 8+
+4. splash-1125x2436.png - iPhone X, XS, 11 Pro
+5. splash-1536x2048.png - iPad Mini, iPad Air
+6. splash-1668x2224.png - iPad Pro 10.5"
+7. splash-2048x2732.png - iPad Pro 12.9"
+
+These should be PNG images with your app's logo centered on a background that matches your app's theme color (#f0f5ff or #b7d3ff).
