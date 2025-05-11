@@ -1,0 +1,226 @@
+:root {
+    /* Light theme variables */
+    --bg-color: #f0f5ff;
+    --text-color: #5d8aa8;
+    --circle-outer-color: rgba(183, 211, 255, 0.3);
+    --circle-inner-color: rgba(220, 237, 255, 0.8);
+    --circle-shadow: rgba(183, 211, 255, 0.5);
+    --button-bg: #d8e2dc;
+    --button-hover-bg: #c9d8d0;
+    --number-cue-color: #5d8aa8;
+}
+
+[data-theme="dark"] {
+    /* Dark theme variables */
+    --bg-color: #2a3b4c;
+    --text-color: #b7d3ff;
+    --circle-outer-color: rgba(93, 138, 168, 0.3);
+    --circle-inner-color: rgba(42, 59, 76, 0.8);
+    --circle-shadow: rgba(93, 138, 168, 0.5);
+    --button-bg: #3a4b5c;
+    --button-hover-bg: #4a5b6c;
+    --number-cue-color: #b7d3ff;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 500px;
+    padding: 20px;
+}
+
+.theme-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 100;
+}
+
+.theme-toggle-btn {
+    background-color: var(--button-bg);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.theme-toggle-btn:hover {
+    background-color: var(--button-hover-bg);
+}
+
+.theme-icon {
+    font-size: 20px;
+}
+
+.number-cue {
+    font-size: 72px;
+    font-weight: bold;
+    color: var(--number-cue-color);
+    margin-bottom: 20px;
+    opacity: 0.8;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.breathing-circle {
+    position: relative;
+    width: 250px;
+    height: 250px;
+    border-radius: 50%;
+    background-color: var(--circle-outer-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 30px;
+    box-shadow: 0 0 30px var(--circle-shadow);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.circle-inner {
+    width: 80%;
+    height: 80%;
+    border-radius: 50%;
+    background-color: var(--circle-inner-color);
+    transition: all 0.3s ease;
+}
+
+.instruction {
+    position: absolute;
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--text-color);
+    text-align: center;
+    z-index: 10;
+    transition: color 0.3s ease;
+}
+
+.controls {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.toggle-btn {
+    background-color: var(--button-bg);
+    border: none;
+    border-radius: 20px;
+    padding: 10px 20px;
+    font-size: 16px;
+    color: var(--text-color);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.toggle-btn:hover {
+    background-color: var(--button-hover-bg);
+}
+
+.audio-icon {
+    font-size: 18px;
+}
+
+/* Animation classes */
+.inhale {
+    animation: inhale 4s ease-in forwards;
+}
+
+.hold {
+    animation: hold 2s ease-in-out forwards;
+}
+
+.exhale {
+    animation: exhale 7s ease-out forwards;
+}
+
+@keyframes inhale {
+    from {
+        transform: scale(0.8);
+        box-shadow: 0 0 10px var(--circle-shadow);
+    }
+    to {
+        transform: scale(1.2);
+        box-shadow: 0 0 40px var(--circle-shadow);
+    }
+}
+
+@keyframes hold {
+    from {
+        transform: scale(1.2);
+        box-shadow: 0 0 40px var(--circle-shadow);
+    }
+    to {
+        transform: scale(1.2);
+        box-shadow: 0 0 40px var(--circle-shadow);
+        filter: hue-rotate(30deg);
+    }
+}
+
+@keyframes exhale {
+    from {
+        transform: scale(1.2);
+        box-shadow: 0 0 40px var(--circle-shadow);
+        filter: hue-rotate(30deg);
+    }
+    to {
+        transform: scale(0.8);
+        box-shadow: 0 0 10px var(--circle-shadow);
+        filter: hue-rotate(0);
+    }
+}
+
+/* Number cue animations */
+.number-fade-in {
+    animation: numberFadeIn 0.5s ease-out forwards;
+}
+
+@keyframes numberFadeIn {
+    0% {
+        opacity: 0;
+        transform: scale(1.5);
+    }
+    20% {
+        opacity: 1;
+        transform: scale(1.2);
+    }
+    100% {
+        opacity: 0.8;
+        transform: scale(1);
+    }
+}
+
+/* Make the number cue more prominent */
+.number-cue {
+    text-shadow: 0 0 10px var(--circle-shadow);
+    transition: all 0.3s ease;
+}

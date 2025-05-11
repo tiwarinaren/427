@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate Breathen Splash Screens</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            margin: 20px 0;
+            max-width: 100%;
+            height: auto;
+        }
+        .controls {
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #b7d3ff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        .sizes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .size-btn {
+            background-color: #d8e2dc;
+        }
+    </style>
+</head>
+<body>
+    <h1>Breathen Splash Screen Generator</h1>
+    <p>Use this tool to generate splash screens for your PWA. Right-click on the canvas and select "Save Image As..." to download.</p>
+    
+    <div class="controls">
+        <button id="generateBtn">Generate Splash</button>
+        <button id="downloadBtn">Download</button>
+    </div>
+    
+    <div class="sizes">
+        <button class="size-btn" data-width="640" data-height="1136">640x1136 (iPhone 5/SE)</button>
+        <button class="size-btn" data-width="750" data-height="1334">750x1334 (iPhone 6/7/8)</button>
+        <button class="size-btn" data-width="1242" data-height="2208">1242x2208 (iPhone 6+/7+/8+)</button>
+        <button class="size-btn" data-width="1125" data-height="2436">1125x2436 (iPhone X/XS/11 Pro)</button>
+        <button class="size-btn" data-width="1536" data-height="2048">1536x2048 (iPad Mini/Air)</button>
+        <button class="size-btn" data-width="1668" data-height="2224">1668x2224 (iPad Pro 10.5")</button>
+        <button class="size-btn" data-width="2048" data-height="2732">2048x2732 (iPad Pro 12.9")</button>
+    </div>
+    
+    <canvas id="splashCanvas" width="640" height="1136"></canvas>
+    
+    <script>
+        const canvas = document.getElementById('splashCanvas');
+        const ctx = canvas.getContext('2d');
+        let currentWidth = 640;
+        let currentHeight = 1136;
+        
+        function drawSplash(width, height) {
+            // Resize canvas
+            canvas.width = width;
+            canvas.height = height;
+            currentWidth = width;
+            currentHeight = height;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw background
+            const gradient = ctx.createLinearGradient(0, 0, 0, height);
+            gradient.addColorStop(0, '#f0f5ff');
+            gradient.addColorStop(1, '#b7d3ff');
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, width, height);
+            
+            // Calculate icon size (40% of the smaller dimension)
+            const iconSize = Math.min(width, height) * 0.4;
+            
+            // Draw outer circle
+            ctx.beginPath();
+            ctx.arc(width/2, height/2, iconSize/2, 0, Math.PI*2);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.fill();
+            
+            // Draw inner circle
+            ctx.beginPath();
+            ctx.arc(width/2, height/2, iconSize/3, 0, Math.PI*2);
+            ctx.fillStyle = '#5d8aa8';
+            ctx.fill();
+            
+            // Draw app name
+            ctx.font = `bold ${iconSize/4}px Arial`;
+            ctx.fillStyle = '#5d8aa8';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('Breathen', width/2, height/2 + iconSize*0.6);
+            
+            // Draw breathing pattern
+            ctx.font = `${iconSize/6}px Arial`;
+            ctx.fillText('4-2-7 Breathing', width/2, height/2 + iconSize*0.8);
+            
+            // Draw text in the circle
+            ctx.font = `bold ${iconSize/5}px Arial`;
+            ctx.fillStyle = 'white';
+            ctx.fillText('4-2-7', width/2, height/2);
+        }
+        
+        // Generate initial splash
+        drawSplash(640, 1136);
+        
+        // Event listeners
+        document.getElementById('generateBtn').addEventListener('click', () => {
+            drawSplash(currentWidth, currentHeight);
+        });
+        
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = `splash-${currentWidth}x${currentHeight}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+        
+        // Size buttons
+        document.querySelectorAll('.size-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const width = parseInt(btn.dataset.width);
+                const height = parseInt(btn.dataset.height);
+                drawSplash(width, height);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Breathen">
+    <meta name="theme-color" content="#b7d3ff">
+    <meta name="description" content="A breathing app with 4-2-7 pattern for relaxation">
+    
+    <title>Breathen - Breathing App</title>
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- iOS specific -->
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="icons/icon-152x152.png">
+    
+    <!-- Splash screens for iOS -->
+    <link rel="apple-touch-startup-image" href="icons/splash-640x1136.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)">
+    <link rel="apple-touch-startup-image" href="icons/splash-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)">
+    <link rel="apple-touch-startup-image" href="icons/splash-1242x2208.png" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3)">
+    <link rel="apple-touch-startup-image" href="icons/splash-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)">
+    <link rel="apple-touch-startup-image" href="icons/splash-1536x2048.png" media="(min-device-width: 768px) and (max-device-width: 1024px) and (-webkit-device-pixel-ratio: 2)">
+    <link rel="apple-touch-startup-image" href="icons/splash-1668x2224.png" media="(min-device-width: 834px) and (max-device-width: 834px) and (-webkit-device-pixel-ratio: 2)">
+    <link rel="apple-touch-startup-image" href="icons/splash-2048x2732.png" media="(min-device-width: 1024px) and (max-device-width: 1024px) and (-webkit-device-pixel-ratio: 2)">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+</head>
+<body>
+    <div class="theme-toggle">
+        <button id="toggleTheme" class="theme-toggle-btn">
+            <span class="theme-icon">☀️</span>
+        </button>
+    </div>
+
+    <div class="container">
+        <div class="number-cue" id="numberCue">4</div>
+        
+        <div class="breathing-circle">
+            <div class="circle-inner"></div>
+            <div class="instruction" id="instruction">Inhale</div>
+        </div>
+        
+        <div class="controls">
+            <button id="toggleAudio" class="toggle-btn">
+                <span class="audio-icon">🔔</span>
+                <span class="audio-text">Beep</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Audio files -->
+    <audio id="softbeep" src="audio/softbeep.mp3" preload="auto"></audio>
+    <audio id="inhale" src="audio/inhale.mp3" preload="auto"></audio>
+    <audio id="hold" src="audio/hold.mp3" preload="auto"></audio>
+    <audio id="exhale" src="audio/exhale.mp3" preload="auto"></audio>
+
+    <script src="script.js"></script>
+</body>
+</html>

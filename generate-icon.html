@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generate Breathen Icon</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            margin: 20px 0;
+        }
+        .controls {
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #b7d3ff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .sizes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .size-btn {
+            background-color: #d8e2dc;
+        }
+    </style>
+</head>
+<body>
+    <h1>Breathen Icon Generator</h1>
+    <p>Use this tool to generate app icons for your PWA. Right-click on the canvas and select "Save Image As..." to download.</p>
+    
+    <div class="controls">
+        <button id="generateBtn">Generate Icon</button>
+        <button id="downloadBtn">Download</button>
+    </div>
+    
+    <div class="sizes">
+        <button class="size-btn" data-size="72">72x72</button>
+        <button class="size-btn" data-size="96">96x96</button>
+        <button class="size-btn" data-size="128">128x128</button>
+        <button class="size-btn" data-size="144">144x144</button>
+        <button class="size-btn" data-size="152">152x152</button>
+        <button class="size-btn" data-size="192">192x192</button>
+        <button class="size-btn" data-size="384">384x384</button>
+        <button class="size-btn" data-size="512">512x512</button>
+    </div>
+    
+    <canvas id="iconCanvas" width="512" height="512"></canvas>
+    
+    <script>
+        const canvas = document.getElementById('iconCanvas');
+        const ctx = canvas.getContext('2d');
+        let currentSize = 512;
+        
+        function drawIcon(size) {
+            // Resize canvas
+            canvas.width = size;
+            canvas.height = size;
+            currentSize = size;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw background
+            const gradient = ctx.createRadialGradient(
+                size/2, size/2, 0,
+                size/2, size/2, size/2
+            );
+            gradient.addColorStop(0, '#f0f5ff');
+            gradient.addColorStop(1, '#b7d3ff');
+            
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            // Draw outer circle
+            ctx.beginPath();
+            ctx.arc(size/2, size/2, size*0.4, 0, Math.PI*2);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.fill();
+            
+            // Draw inner circle
+            ctx.beginPath();
+            ctx.arc(size/2, size/2, size*0.25, 0, Math.PI*2);
+            ctx.fillStyle = '#5d8aa8';
+            ctx.fill();
+            
+            // Draw text if size is large enough
+            if (size >= 144) {
+                ctx.font = `bold ${size*0.15}px Arial`;
+                ctx.fillStyle = 'white';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('4-2-7', size/2, size/2);
+            }
+        }
+        
+        // Generate initial icon
+        drawIcon(512);
+        
+        // Event listeners
+        document.getElementById('generateBtn').addEventListener('click', () => {
+            drawIcon(currentSize);
+        });
+        
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = `icon-${currentSize}x${currentSize}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+        
+        // Size buttons
+        document.querySelectorAll('.size-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const size = parseInt(btn.dataset.size);
+                drawIcon(size);
+            });
+        });
+    </script>
+</body>
+</html>
