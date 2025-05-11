@@ -89,21 +89,33 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('breathenTheme', 'light');
     }
     
+    // Preload and unlock all audio on first user interaction (for iOS/PWA)
+    function preloadAllAudio() {
+        [softbeepAudio, inhaleAudio, holdAudio, exhaleAudio].forEach(audio => {
+            if (audio) {
+                audio.load();
+                audio.preload = 'auto';
+            }
+        });
+    }
+
+    // Unlock audio context on first user gesture
+    function unlockAudio() {
+        [softbeepAudio, inhaleAudio, holdAudio, exhaleAudio].forEach(audio => {
+            if (audio && audio.paused) {
+                audio.volume = 0;
+                audio.play().then(() => { audio.pause(); audio.currentTime = 0; audio.volume = 1; }).catch(() => {});
+            }
+        });
+    }
+
+    // Attach to any user gesture
+    document.body.addEventListener('touchstart', unlockAudio, { once: true });
+    document.body.addEventListener('mousedown', unlockAudio, { once: true });
+    preloadAllAudio();
+
     // Toggle between voice and beep audio
     toggleAudioBtn.addEventListener('click', () => {
-        // Fix: Unlock audio context on first user interaction for mobile browsers
-        if (softbeepAudio.paused) {
-            softbeepAudio.play().then(() => softbeepAudio.pause()).catch(() => {});
-        }
-        if (inhaleAudio.paused) {
-            inhaleAudio.play().then(() => inhaleAudio.pause()).catch(() => {});
-        }
-        if (holdAudio.paused) {
-            holdAudio.play().then(() => holdAudio.pause()).catch(() => {});
-        }
-        if (exhaleAudio.paused) {
-            exhaleAudio.play().then(() => exhaleAudio.pause()).catch(() => {});
-        }
         isVoiceMode = !isVoiceMode;
         
         if (isVoiceMode) {
@@ -119,20 +131,31 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Play the appropriate audio based on the current mode
     function playAudio(phase) {
+        let audioToPlay;
         if (isVoiceMode) {
             switch (phase) {
                 case 'inhale':
-                    inhaleAudio.play();
+                    audioToPlay = inhaleAudio;
                     break;
                 case 'hold':
-                    holdAudio.play();
+                    audioToPlay = holdAudio;
                     break;
                 case 'exhale':
-                    exhaleAudio.play();
+                    audioToPlay = exhaleAudio;
                     break;
             }
         } else {
-            softbeepAudio.play();
+            audioToPlay = softbeepAudio;
+        }
+        if (audioToPlay) {
+            audioToPlay.pause();
+            audioToPlay.currentTime = 0;
+            const playPromise = audioToPlay.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    setTimeout(() => { audioToPlay.play().catch(() => {}); }, 100);
+                });
+            }
         }
     }
     
