@@ -278,26 +278,30 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
     document.body.appendChild(startOverlay);
 
-    // Pause breathing cycle until user taps Start
-    let breathingStarted = false;
-
-    // Hide the overlay visually and from screen readers
-    function hideStartOverlay() {
-        startOverlay.style.display = 'none';
-        startOverlay.setAttribute('aria-hidden', 'true');
+    // Only allow Start button logic after DOM is fully ready and all elements are present
+    function setupStartOverlayHandler() {
+        const startBtn = document.getElementById('startAppBtn');
+        if (!startBtn) return;
+        let breathingStarted = false;
+        function hideStartOverlay() {
+            startOverlay.style.display = 'none';
+            startOverlay.setAttribute('aria-hidden', 'true');
+        }
+        function startBreathingWithAudioUnlock() {
+            if (breathingStarted) return;
+            breathingStarted = true;
+            robustPreloadAndUnlockAudio();
+            hideStartOverlay();
+            setTimeout(startBreathingCycle, 100); // Give audio unlock a moment
+        }
+        startBtn.addEventListener('click', startBreathingWithAudioUnlock);
     }
-
-    function startBreathingWithAudioUnlock() {
-        if (breathingStarted) return;
-        breathingStarted = true;
-        robustPreloadAndUnlockAudio();
-        hideStartOverlay();
-        startBreathingCycle();
+    // Wait for DOMContentLoaded to ensure #startAppBtn exists
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setupStartOverlayHandler);
+    } else {
+        setupStartOverlayHandler();
     }
-    document.getElementById('startAppBtn').addEventListener('click', startBreathingWithAudioUnlock);
-
-    // Prevent auto-start
-    // Remove or comment out: startBreathingCycle();
 
     // Handle visibility change to pause/resume when app is in background
     document.addEventListener('visibilitychange', () => {
