@@ -2,7 +2,7 @@
   "name": "Breathen",
   "short_name": "Breathen",
   "description": "A breathing app with 4-2-7 pattern for relaxation",
-  "start_url": "/index.html",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#f0f5ff",
   "theme_color": "#b7d3ff",
