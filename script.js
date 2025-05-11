@@ -1,7 +1,8 @@
 // Register Service Worker for PWA functionality
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/service-worker.js')
+        // Fix: Use relative path for service worker on GitHub Pages
+        navigator.serviceWorker.register('./service-worker.js')
             .then(registration => {
                 console.log('ServiceWorker registration successful with scope: ', registration.scope);
             })
@@ -90,6 +91,19 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Toggle between voice and beep audio
     toggleAudioBtn.addEventListener('click', () => {
+        // Fix: Unlock audio context on first user interaction for mobile browsers
+        if (softbeepAudio.paused) {
+            softbeepAudio.play().then(() => softbeepAudio.pause()).catch(() => {});
+        }
+        if (inhaleAudio.paused) {
+            inhaleAudio.play().then(() => inhaleAudio.pause()).catch(() => {});
+        }
+        if (holdAudio.paused) {
+            holdAudio.play().then(() => holdAudio.pause()).catch(() => {});
+        }
+        if (exhaleAudio.paused) {
+            exhaleAudio.play().then(() => exhaleAudio.pause()).catch(() => {});
+        }
         isVoiceMode = !isVoiceMode;
         
         if (isVoiceMode) {
