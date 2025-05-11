@@ -1,6 +1,6 @@
 {
-  "name": "Breathen",
-  "short_name": "Breathen",
+  "name": "4-2-7",
+  "short_name": "4-2-7",
   "description": "A breathing app with 4-2-7 pattern for relaxation",
   "start_url": "./",
   "display": "standalone",
