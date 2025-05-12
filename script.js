@@ -98,19 +98,37 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!audio) return;
             audio.load();
             audio.preload = 'auto';
-            const originalVolume = audio.volume;
-            audio.volume = 0;
-            const playPromise = audio.play();
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    audio.pause();
-                    audio.currentTime = 0;
-                    audio.volume = originalVolume;
-                }).catch(() => {
-                    audio.volume = originalVolume;
-                });
+            // Unlock audio context silently: use Web Audio API if available, else play/pause with muted property
+            if (typeof audio.muted !== 'undefined') {
+                audio.muted = true;
+                const playPromise = audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        audio.pause();
+                        audio.currentTime = 0;
+                        audio.muted = false;
+                    }).catch(() => {
+                        audio.muted = false;
+                    });
+                } else {
+                    audio.muted = false;
+                }
             } else {
-                audio.volume = originalVolume;
+                // Fallback for browsers without .muted
+                const originalVolume = audio.volume;
+                audio.volume = 0;
+                const playPromise = audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        audio.pause();
+                        audio.currentTime = 0;
+                        audio.volume = originalVolume;
+                    }).catch(() => {
+                        audio.volume = originalVolume;
+                    });
+                } else {
+                    audio.volume = originalVolume;
+                }
             }
         });
     }
