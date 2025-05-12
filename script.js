@@ -39,7 +39,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const numberCue = document.getElementById('numberCue');
     
     // Audio elements
-    const softbeepAudio = document.getElementById('softbeep');
+    const softbeepInhale = document.getElementById('softbeep_inhale');
+    const softbeepHold = document.getElementById('softbeep_hold');
+    const softbeepExhale = document.getElementById('softbeep_exhale');
     const inhaleAudio = document.getElementById('inhale');
     const holdAudio = document.getElementById('hold');
     const exhaleAudio = document.getElementById('exhale');
@@ -89,17 +91,15 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('breathenTheme', 'light');
     }
     
-    // --- Robust Audio Unlock and Preload (modeled after New Folder (2)) ---
+    // --- Robust Audio Unlock and Preload ---
     function robustPreloadAndUnlockAudio() {
-        const audioElements = [softbeepAudio, inhaleAudio, holdAudio, exhaleAudio];
+        const audioElements = [softbeepInhale, softbeepHold, softbeepExhale, inhaleAudio, holdAudio, exhaleAudio];
         audioElements.forEach(audio => {
             if (!audio) return;
             audio.load();
             audio.preload = 'auto';
-            // Unlock audio context silently: play at volume 0, then restore
             const originalVolume = audio.volume;
             audio.volume = 0;
-            // Use play() and immediately pause, but never let sound through
             const playPromise = audio.play();
             if (playPromise !== undefined) {
                 playPromise.then(() => {
@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    // --- Robust Play Function (modeled after New Folder (2)) ---
+    // --- Robust Play Function ---
     function playAudio(phase) {
         let audioToPlay;
         if (isVoiceMode) {
@@ -150,7 +150,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     break;
             }
         } else {
-            audioToPlay = softbeepAudio;
+            switch (phase) {
+                case 'inhale':
+                    audioToPlay = softbeepInhale;
+                    break;
+                case 'hold':
+                    audioToPlay = softbeepHold;
+                    break;
+                case 'exhale':
+                    audioToPlay = softbeepExhale;
+                    break;
+            }
         }
         if (audioToPlay) {
             audioToPlay.pause();
@@ -168,38 +178,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // Start the breathing cycle
-    function startBreathingCycle() {
-        // Clear any existing interval
+    // Start the breathing cycle with optional initial delay
+    function startBreathingCycle(initialDelay = 0) {
         if (breathingInterval) {
             clearInterval(breathingInterval);
         }
-        
-        // Initial state
-        breathingCycle();
-        
-        // Set up the continuous cycle
-        breathingInterval = setInterval(breathingCycle, 13000); // 4s + 2s + 7s = 13s total cycle
+        setTimeout(() => {
+            breathingCycle();
+            breathingInterval = setInterval(breathingCycle, 14000); // 4+1 + 2+1 + 7+1 = 15s, but keep 14s for overlap
+        }, initialDelay);
     }
     
     // Handle a single breathing cycle
     function breathingCycle() {
-        // Clear any existing countdown timers
         clearAllCountdowns();
-        
-        // Inhale phase - 4 seconds
+        // Inhale phase - 4 seconds + 1 extra
         currentPhase = 'inhale';
         instruction.textContent = 'Inhale';
         instruction.classList.add('animate__animated', 'animate__fadeIn');
         breathingCircle.classList.remove('exhale', 'hold');
         breathingCircle.classList.add('inhale');
-        
-        // Start inhale countdown from 4
-        startCountdown(4, 1000);
-        
+        startCountdown(4, 1000, true); // true = add zero
         playAudio('inhale');
-        
-        // Hold phase - after 4 seconds, for 2 seconds
+        // Hold phase - after 5 seconds (4+1), for 2+1 seconds
         setTimeout(() => {
             currentPhase = 'hold';
             instruction.textContent = 'Hold';
@@ -207,14 +208,10 @@ document.addEventListener('DOMContentLoaded', () => {
             instruction.classList.add('animate__pulse');
             breathingCircle.classList.remove('inhale');
             breathingCircle.classList.add('hold');
-            
-            // Start hold countdown from 2
-            startCountdown(2, 1000);
-            
+            startCountdown(2, 1000, true);
             playAudio('hold');
-        }, 4000);
-        
-        // Exhale phase - after 6 seconds (4+2), for 7 seconds
+        }, 5000);
+        // Exhale phase - after 8 seconds (4+1+2+1), for 7+1 seconds
         setTimeout(() => {
             currentPhase = 'exhale';
             instruction.textContent = 'Exhale';
@@ -222,12 +219,9 @@ document.addEventListener('DOMContentLoaded', () => {
             instruction.classList.add('animate__fadeIn');
             breathingCircle.classList.remove('hold');
             breathingCircle.classList.add('exhale');
-            
-            // Start exhale countdown from 7
-            startCountdown(7, 1000);
-            
+            startCountdown(7, 1000, true);
             playAudio('exhale');
-        }, 6000);
+        }, 8000);
     }
     
     // Array to store all countdown timers
@@ -239,17 +233,18 @@ document.addEventListener('DOMContentLoaded', () => {
         countdownTimers = [];
     }
     
-    // Start a countdown from a given number with a specified interval
-    function startCountdown(from, interval) {
+    // Start a countdown from a given number with a specified interval, optionally add zero
+    function startCountdown(from, interval, addZero = false) {
         updateNumberCue(from);
-        
-        // Create a countdown sequence
-        for (let i = from - 1; i >= 1; i--) {
+        for (let i = from - 1; i >= 0; i--) {
             const timer = setTimeout(() => {
                 updateNumberCue(i);
             }, (from - i) * interval);
-            
             countdownTimers.push(timer);
+        }
+        if (!addZero) {
+            // If not adding zero, remove the last timer
+            countdownTimers.pop();
         }
     }
     
@@ -299,8 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
             breathingStarted = true;
             robustPreloadAndUnlockAudio();
             hideStartOverlay();
-            // Wait a short moment to ensure all audio is unlocked and silent before starting
-            setTimeout(startBreathingCycle, 250);
+            setTimeout(() => startBreathingCycle(0), 1000); // 1s delay before first cycle
         }
         startBtn.addEventListener('click', startBreathingWithAudioUnlock);
     }
