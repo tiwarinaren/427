@@ -96,17 +96,22 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!audio) return;
             audio.load();
             audio.preload = 'auto';
-            // Try to unlock audio context silently
+            // Unlock audio context silently: play at volume 0, then restore
             const originalVolume = audio.volume;
             audio.volume = 0;
-            // Try to play, but do NOT block or wait for promise
-            audio.play().then(() => {
-                audio.pause();
-                audio.currentTime = 0;
+            // Use play() and immediately pause, but never let sound through
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    audio.pause();
+                    audio.currentTime = 0;
+                    audio.volume = originalVolume;
+                }).catch(() => {
+                    audio.volume = originalVolume;
+                });
+            } else {
                 audio.volume = originalVolume;
-            }).catch(() => {
-                audio.volume = originalVolume;
-            });
+            }
         });
     }
     // Call robust preload/unlock on DOMContentLoaded and load
@@ -294,7 +299,8 @@ document.addEventListener('DOMContentLoaded', () => {
             breathingStarted = true;
             robustPreloadAndUnlockAudio();
             hideStartOverlay();
-            setTimeout(startBreathingCycle, 100); // Give audio unlock a moment
+            // Wait a short moment to ensure all audio is unlocked and silent before starting
+            setTimeout(startBreathingCycle, 250);
         }
         startBtn.addEventListener('click', startBreathingWithAudioUnlock);
     }
