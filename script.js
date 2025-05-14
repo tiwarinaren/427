@@ -24,6 +24,43 @@ window.addEventListener('resize', () => {
     document.body.style.height = `${window.innerHeight}px`;
 });
 
+// Wake Lock API variable
+let wakeLock = null;
+
+// Function to request wake lock
+async function requestWakeLock() {
+    if ('wakeLock' in navigator) {
+        try {
+            wakeLock = await navigator.wakeLock.request('screen');
+            console.log('Wake Lock is active');
+            
+            // Listen for wake lock release
+            wakeLock.addEventListener('release', () => {
+                console.log('Wake Lock was released');
+            });
+            
+        } catch (err) {
+            console.error(`Wake Lock error: ${err.name}, ${err.message}`);
+        }
+    } else {
+        console.warn('Wake Lock API not supported in this browser');
+    }
+}
+
+// Function to release wake lock
+function releaseWakeLock() {
+    if (wakeLock !== null) {
+        wakeLock.release()
+            .then(() => {
+                wakeLock = null;
+                console.log('Wake Lock released');
+            })
+            .catch((err) => {
+                console.error(`Error releasing Wake Lock: ${err.name}, ${err.message}`);
+            });
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // Set initial height for iOS PWA
     document.body.style.height = `${window.innerHeight}px`;
@@ -37,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggleThemeBtn = document.getElementById('toggleTheme');
     const themeIcon = document.querySelector('.theme-icon');
     const numberCue = document.getElementById('numberCue');
+    const gratitudeMessage = document.getElementById('gratitudeMessage');
     
     // Audio elements
     const softbeepInhale = document.getElementById('softbeep_inhale');
@@ -46,12 +84,48 @@ document.addEventListener('DOMContentLoaded', () => {
     const holdAudio = document.getElementById('hold');
     const exhaleAudio = document.getElementById('exhale');
     
+    // Gratitude statements array
+    const gratitudeStatements = [
+        "I am grateful for this moment of peace and reflection",
+        "Today, I choose to focus on what brings me joy",
+        "I appreciate the gift of breath and life",
+        "I am thankful for the strength within me",
+        "Every breath is an opportunity for growth",
+        "I am grateful for my body's ability to heal and rejuvenate",
+        "Each day brings new possibilities to be thankful for",
+        "I appreciate the calmness that surrounds me",
+        "I am thankful for this moment of mindfulness",
+        "Today, I celebrate my journey of well-being",
+        "I am grateful for the power of my breath",
+        "Life flows through me with each breath I take",
+        "I appreciate the peace that comes with mindful breathing",
+        "I am thankful for this time to reconnect with myself",
+        "Every breath brings new energy and vitality",
+        "I am grateful for the ability to find stillness within",
+        "Each moment of breathing is a gift",
+        "I appreciate the healing power of conscious breath",
+        "Today, I am thankful for my inner strength",
+        "I am grateful for the rhythm of my breath",
+        "This moment of mindfulness is a blessing",
+        "I appreciate the harmony of my mind and body",
+        "I am thankful for the peace within my heart"
+    ];
+
+    // Function to display a random gratitude message
+    function displayRandomGratitude() {
+        const randomIndex = Math.floor(Math.random() * gratitudeStatements.length);
+        gratitudeMessage.textContent = gratitudeStatements[randomIndex];
+    }
+
     // State variables
     let isVoiceMode = false; // true for voice, false for beep
     let isDarkMode = false; // false for light mode, true for dark mode
     let breathingInterval;
     let currentPhase = 'inhale';
     
+    // Display initial gratitude message
+    displayRandomGratitude();
+
     // Check for saved theme preference
     const savedTheme = localStorage.getItem('breathenTheme');
     if (savedTheme === 'dark') {
@@ -131,8 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         });
-    }
-    // Call robust preload/unlock on DOMContentLoaded and load
+    }    // Call robust preload/unlock on DOMContentLoaded and load
     document.addEventListener('DOMContentLoaded', robustPreloadAndUnlockAudio);
     window.addEventListener('load', robustPreloadAndUnlockAudio);
     // Also call immediately in case DOM is already loaded
@@ -195,15 +268,26 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
-    
-    // Start the breathing cycle with optional initial delay
+      // Start the breathing cycle with optional initial delay
     function startBreathingCycle(initialDelay = 0) {
         if (breathingInterval) {
             clearInterval(breathingInterval);
         }
+        
+        const startOverlay = document.getElementById('startOverlay');
+        
+        // Request wake lock to keep screen on during breathing exercise
+        requestWakeLock();
+        
+        // Start the sequence after the specified delay
         setTimeout(() => {
-            breathingCycle();
-            breathingInterval = setInterval(breathingCycle, 14000); // 4+1 + 2+1 + 7+1 = 15s, but keep 14s for overlap
+            startOverlay.style.opacity = '0';
+            setTimeout(() => {
+                startOverlay.style.display = 'none';
+                displayRandomGratitude(); // Refresh gratitude for next session
+                breathingCycle();
+                breathingInterval = setInterval(breathingCycle, 14000); // 4+1 + 2+1 + 7+1 = 15s, but keep 14s for overlap
+            }, 500);
         }, initialDelay);
     }
     
@@ -274,30 +358,9 @@ document.addEventListener('DOMContentLoaded', () => {
         numberCue.textContent = number;
         numberCue.classList.add('number-fade-in');
     }
-    
-    // --- Add Start Button for Guaranteed Audio on All Browsers ---
+      // --- Add Start Button for Guaranteed Audio on All Browsers ---
     // Create and insert the start button overlay ONLY if not already present
     let startOverlay = document.getElementById('startOverlay');
-    if (!startOverlay) {
-        startOverlay = document.createElement('div');
-        startOverlay.id = 'startOverlay';
-        startOverlay.style.position = 'fixed';
-        startOverlay.style.top = 0;
-        startOverlay.style.left = 0;
-        startOverlay.style.width = '100vw';
-        startOverlay.style.height = '100vh';
-        startOverlay.style.background = 'rgba(247,249,255,0.98)';
-        startOverlay.style.display = 'flex';
-        startOverlay.style.flexDirection = 'column';
-        startOverlay.style.alignItems = 'center';
-        startOverlay.style.justifyContent = 'center';
-        startOverlay.style.zIndex = 9999;
-        startOverlay.innerHTML = `
-            <button id="startAppBtn" style="font-size:2rem;padding:1rem 2.5rem;border-radius:2rem;background:#b7d3ff;color:#1f2937;border:none;box-shadow:0 2px 8px #b7d3ff80;cursor:pointer;">Start</button>
-            <div style="margin-top:1.5rem;color:#4b5563;font-size:1.1rem;">Tap to begin and enable sound</div>
-        `;
-        document.body.appendChild(startOverlay);
-    }
 
     // Setup Start button handler
     const startBtn = document.getElementById('startAppBtn');
@@ -323,8 +386,11 @@ document.addEventListener('DOMContentLoaded', () => {
             // App is in background, clear the interval and countdown timers
             clearInterval(breathingInterval);
             clearAllCountdowns();
+            
+            // Release wake lock when app is in background
+            releaseWakeLock();
         } else {
-            // App is visible again, restart the cycle
+            // App is visible again, restart the cycle and request wake lock
             startBreathingCycle();
         }
     });
