@@ -286,7 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 startOverlay.style.display = 'none';
                 displayRandomGratitude(); // Refresh gratitude for next session
                 breathingCycle();
-                breathingInterval = setInterval(breathingCycle, 14000); // 4+1 + 2+1 + 7+1 = 15s, but keep 14s for overlap
+                breathingInterval = setInterval(breathingCycle, 16000); // 5s inhale + 3s hold + 8s exhale = 16s
             }, 500);
         }, initialDelay);
     }
@@ -294,15 +294,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Handle a single breathing cycle
     function breathingCycle() {
         clearAllCountdowns();
-        // Inhale phase - 4 seconds + 1 extra
+        // Inhale phase - 4 seconds + 1 extra (5s)
         currentPhase = 'inhale';
         instruction.textContent = 'Inhale';
         instruction.classList.add('animate__animated', 'animate__fadeIn');
         breathingCircle.classList.remove('exhale', 'hold');
         breathingCircle.classList.add('inhale');
-        startCountdown(4, 1000, true); // true = add zero
+        startCountdown(4, 1000, true);
         playAudio('inhale');
-        // Hold phase - after 5 seconds (4+1), for 2+1 seconds
+        // Hold phase - after 5 seconds (4+1), for 2+1 seconds (3s)
         setTimeout(() => {
             currentPhase = 'hold';
             instruction.textContent = 'Hold';
@@ -313,7 +313,7 @@ document.addEventListener('DOMContentLoaded', () => {
             startCountdown(2, 1000, true);
             playAudio('hold');
         }, 5000);
-        // Exhale phase - after 8 seconds (4+1+2+1), for 7+1 seconds
+        // Exhale phase - after 8 seconds (5+3), for 7+1 seconds (8s)
         setTimeout(() => {
             currentPhase = 'exhale';
             instruction.textContent = 'Exhale';
@@ -321,7 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
             instruction.classList.add('animate__fadeIn');
             breathingCircle.classList.remove('hold');
             breathingCircle.classList.add('exhale');
-            startCountdown(7, 1000, true);
+            startCountdown(7, 1000, true); // 7,6,5,4,3,2,1,0
             playAudio('exhale');
         }, 8000);
     }
