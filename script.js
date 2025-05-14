@@ -155,6 +155,9 @@ document.addEventListener('DOMContentLoaded', () => {
         themeIcon.textContent = '🌙';
         isDarkMode = true;
         localStorage.setItem('breathenTheme', 'dark');
+        // Update theme-color meta for dark mode
+        const themeMeta = document.getElementById('themeColorMeta');
+        if (themeMeta) themeMeta.setAttribute('content', '#181c1f');
     }
     
     // Disable dark mode
@@ -163,6 +166,9 @@ document.addEventListener('DOMContentLoaded', () => {
         themeIcon.textContent = '☀️';
         isDarkMode = false;
         localStorage.setItem('breathenTheme', 'light');
+        // Update theme-color meta for light mode
+        const themeMeta = document.getElementById('themeColorMeta');
+        if (themeMeta) themeMeta.setAttribute('content', '#ffffff');
     }
     
     // --- Robust Audio Unlock and Preload ---
