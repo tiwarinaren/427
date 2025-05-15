@@ -173,46 +173,42 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // --- Robust Audio Unlock and Preload ---
     function robustPreloadAndUnlockAudio() {
-    const audioElements = [softbeepInhale, softbeepHold, softbeepExhale, inhaleAudio, holdAudio, exhaleAudio];
-    audioElements.forEach(audio => {
-        if (!audio) return;
-        audio.load();
-        audio.preload = 'auto';
-        // Unlock audio context silently: use Web Audio API if available, else play/pause with muted property
-        if (typeof audio.muted !== 'undefined') {
-            audio.muted = true;
-            const playPromise = audio.play();
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    audio.pause();
-                    audio.currentTime = 0;
-                    audio.muted = false;
-                }).catch(() => {
-                    audio.muted = false;
-                });
+        const audioElements = [softbeepInhale, softbeepHold, softbeepExhale, inhaleAudio, holdAudio, exhaleAudio];
+        audioElements.forEach(audio => {
+            if (!audio) return;
+            audio.load();
+            audio.preload = 'auto';
+            // Always mute or set volume 0 before play
+            let restoreVolume = null;
+            if (typeof audio.muted !== 'undefined') {
+                audio.muted = true;
+                const playPromise = audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        audio.pause();
+                        audio.currentTime = 0;
+                        // Do NOT unmute here, keep muted until actual playback
+                    }).catch(() => {
+                        // Still keep muted
+                    });
+                }
             } else {
-                audio.muted = false;
+                // Fallback for browsers without .muted
+                restoreVolume = audio.volume;
+                audio.volume = 0;
+                const playPromise = audio.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        audio.pause();
+                        audio.currentTime = 0;
+                        // Do NOT restore volume here, keep at 0 until actual playback
+                    }).catch(() => {
+                        // Still keep at 0
+                    });
+                }
             }
-        } else {
-            // Fallback for browsers without .muted
-            const originalVolume = audio.volume;
-            audio.volume = 0;
-            const playPromise = audio.play();
-            if (playPromise !== undefined) {
-                playPromise.then(() => {
-                    audio.pause();
-                    audio.currentTime = 0;
-                    audio.volume = originalVolume;
-                }).catch(() => {
-                    audio.volume = originalVolume;
-                });
-            } else {
-                audio.volume = originalVolume;
-            }
-        }
-    });
-}
-   // Call robust preload/unlock on DOMContentLoaded and load
+        });
+    }    // Call robust preload/unlock on DOMContentLoaded and load
     document.addEventListener('DOMContentLoaded', robustPreloadAndUnlockAudio);
     window.addEventListener('load', robustPreloadAndUnlockAudio);
     // Also call immediately in case DOM is already loaded
@@ -261,6 +257,12 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         if (audioToPlay) {
+            // Unmute or restore volume just before actual playback
+            if (typeof audioToPlay.muted !== 'undefined') {
+                audioToPlay.muted = false;
+            } else {
+                audioToPlay.volume = 1;
+            }
             audioToPlay.pause();
             audioToPlay.currentTime = 0;
             audioToPlay.load();
@@ -380,7 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
         function startBreathingWithAudioUnlock() {
             if (breathingStarted) return;
             breathingStarted = true;
-            robustPreloadAndUnlockAudio();
+            robustPreloadAndUnlockAudio(); // This is now silent
             hideStartOverlay();
             setTimeout(() => startBreathingCycle(0), 1000); // 1s delay before first cycle
         }
