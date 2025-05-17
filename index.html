@@ -32,7 +32,8 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
 
-<meta name="theme-color" id="themeColorMeta" content="#ffffff">
+    <!-- Theme color for browser top bar, will be updated by JS -->
+    <meta name="theme-color" id="themeColorMeta" content="#ffffff">
 </head>
 <body>
     <div id="startOverlay">
@@ -47,13 +48,36 @@
             <div id="gratitudeMessage" class="gratitude-message"></div>
         </div>
         
+        <!-- Settings icon -->
+        <button id="settingsBtn" class="settings-button">
+            <span class="settings-icon">⚙️</span>
+        </button>
+        
+        <!-- Settings panel (hidden by default) -->
+        <div id="settingsPanel" class="settings-panel">
+            <h3>Breathing Pattern</h3>
+            <div class="settings-form">
+                <div class="setting-group">
+                    <label for="inhaleTime">Inhale (seconds)</label>
+                    <input type="number" id="inhaleTime" min="1" max="10" value="4">
+                </div>
+                <div class="setting-group">
+                    <label for="holdTime">Hold (seconds)</label>
+                    <input type="number" id="holdTime" min="1" max="10" value="2">
+                </div>
+                <div class="setting-group">
+                    <label for="exhaleTime">Exhale (seconds)</label>
+                    <input type="number" id="exhaleTime" min="1" max="10" value="7">
+                </div>
+                <button id="saveSettings" class="save-settings-btn">Save</button>
+            </div>
+        </div>
+        
         <!-- Start button with magical effects -->
         <button id="startAppBtn" class="start-button">
             <span class="start-icon">✨</span>
             <span>Begin</span>
         </button>
-        
-        
         
         <div class="creator-credit">Made with ❤️ by Nik for Kit</div>
     </div>
