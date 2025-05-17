@@ -127,6 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let inhaleTime = 4;
     let holdTime = 2;
     let exhaleTime = 7;
+    let breatheToZero = true; // Default to true (count down to 0)
     
     // Display initial gratitude message
     displayRandomGratitude();
@@ -149,15 +150,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const savedInhaleTime = localStorage.getItem('breathenInhaleTime');
     const savedHoldTime = localStorage.getItem('breathenHoldTime');
     const savedExhaleTime = localStorage.getItem('breathenExhaleTime');
+    const savedBreatheToZero = localStorage.getItem('breathenBreatheToZero');
     
     if (savedInhaleTime) inhaleTime = parseInt(savedInhaleTime);
     if (savedHoldTime) holdTime = parseInt(savedHoldTime);
     if (savedExhaleTime) exhaleTime = parseInt(savedExhaleTime);
+    if (savedBreatheToZero !== null) breatheToZero = savedBreatheToZero === 'true';
     
     // Update input fields with saved values
     document.getElementById('inhaleTime').value = inhaleTime;
     document.getElementById('holdTime').value = holdTime;
     document.getElementById('exhaleTime').value = exhaleTime;
+    document.getElementById('breatheToZero').checked = breatheToZero;
     
     // Toggle between light and dark mode
     toggleThemeBtn.addEventListener('click', () => {
@@ -278,6 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const newInhaleTime = parseInt(document.getElementById('inhaleTime').value);
         const newHoldTime = parseInt(document.getElementById('holdTime').value);
         const newExhaleTime = parseInt(document.getElementById('exhaleTime').value);
+        const newBreatheToZero = document.getElementById('breatheToZero').checked;
         
         // Validate inputs (ensure they're within reasonable ranges)
         if (newInhaleTime >= 1 && newInhaleTime <= 10 &&
@@ -288,11 +293,13 @@ document.addEventListener('DOMContentLoaded', () => {
             inhaleTime = newInhaleTime;
             holdTime = newHoldTime;
             exhaleTime = newExhaleTime;
+            breatheToZero = newBreatheToZero;
             
             // Save to localStorage
             localStorage.setItem('breathenInhaleTime', inhaleTime);
             localStorage.setItem('breathenHoldTime', holdTime);
             localStorage.setItem('breathenExhaleTime', exhaleTime);
+            localStorage.setItem('breathenBreatheToZero', breatheToZero);
             
             // Close settings panel
             settingsPanel.classList.remove('visible');
@@ -376,10 +383,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Request wake lock to keep screen on during breathing exercise
         requestWakeLock();
         
-        // Calculate total cycle time based on current settings
-        const inhaleDuration = inhaleTime + 1; // +1 for the extra second
-        const holdDuration = holdTime + 1; // +1 for the extra second
-        const exhaleDuration = exhaleTime + 1; // +1 for the extra second
+        // Calculate total cycle time based on current settings and breatheToZero setting
+        // If breatheToZero is false, we need to subtract 1 second from each phase
+        const extraSecond = breatheToZero ? 1 : 0;
+        const inhaleDuration = inhaleTime + extraSecond;
+        const holdDuration = holdTime + extraSecond;
+        const exhaleDuration = exhaleTime + extraSecond;
         const totalCycleTime = (inhaleDuration + holdDuration + exhaleDuration) * 1000;
         
         // Start the sequence after the specified delay
@@ -398,15 +407,19 @@ document.addEventListener('DOMContentLoaded', () => {
     function breathingCycle() {
         clearAllCountdowns();
         
-        // Calculate durations with the extra second
-        const inhaleDuration = inhaleTime + 1; // +1 for the extra second
-        const holdDuration = holdTime + 1; // +1 for the extra second
-        const exhaleDuration = exhaleTime + 1; // +1 for the extra second
+        // Calculate durations based on breatheToZero setting
+        // If breatheToZero is false, we don't add the extra second
+        const extraSecond = breatheToZero ? 1 : 0;
+        const inhaleDuration = inhaleTime + extraSecond;
+        const holdDuration = holdTime + extraSecond;
+        const exhaleDuration = exhaleTime + extraSecond;
         
         // Update CSS animations to match the current durations
-        document.documentElement.style.setProperty('--inhale-duration', `${inhaleTime}s`);
-        document.documentElement.style.setProperty('--hold-duration', `${holdTime}s`);
-        document.documentElement.style.setProperty('--exhale-duration', `${exhaleTime}s`);
+        // If breatheToZero is false, we need to adjust the animation duration to match the actual countdown time
+        const animationAdjustment = breatheToZero ? 0 : -1;
+        document.documentElement.style.setProperty('--inhale-duration', `${inhaleTime + animationAdjustment}s`);
+        document.documentElement.style.setProperty('--hold-duration', `${holdTime + animationAdjustment}s`);
+        document.documentElement.style.setProperty('--exhale-duration', `${exhaleTime + animationAdjustment}s`);
         
         // Update animation classes to force them to re-apply
         const breathingCircleElement = document.querySelector('.circle-inner');
@@ -421,7 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
         instruction.classList.add('animate__animated', 'animate__fadeIn');
         breathingCircle.classList.remove('exhale', 'hold');
         breathingCircle.classList.add('inhale');
-        startCountdown(inhaleTime, 1000, true);
+        startCountdown(inhaleTime, 1000);
         playAudio('inhale');
         
         // Hold phase - after inhale duration
@@ -432,7 +445,7 @@ document.addEventListener('DOMContentLoaded', () => {
             instruction.classList.add('animate__pulse');
             breathingCircle.classList.remove('inhale');
             breathingCircle.classList.add('hold');
-            startCountdown(holdTime, 1000, true);
+            startCountdown(holdTime, 1000);
             playAudio('hold');
         }, inhaleDuration * 1000);
         
@@ -444,7 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
             instruction.classList.add('animate__fadeIn');
             breathingCircle.classList.remove('hold');
             breathingCircle.classList.add('exhale');
-            startCountdown(exhaleTime, 1000, true);
+            startCountdown(exhaleTime, 1000);
             playAudio('exhale');
         }, (inhaleDuration + holdDuration) * 1000);
     }
@@ -458,18 +471,26 @@ document.addEventListener('DOMContentLoaded', () => {
         countdownTimers = [];
     }
     
-    // Start a countdown from a given number with a specified interval, optionally add zero
-    function startCountdown(from, interval, addZero = false) {
+    // Start a countdown from a given number with a specified interval
+    function startCountdown(from, interval) {
         updateNumberCue(from);
-        for (let i = from - 1; i >= 0; i--) {
+        
+        // Determine the lowest number to count down to based on breatheToZero setting
+        const lowestNumber = breatheToZero ? 0 : 1;
+        
+        // Calculate the total countdown time based on whether we're counting to 0 or stopping at 1
+        const totalCountdownTime = from * interval;
+        
+        for (let i = from - 1; i >= lowestNumber; i--) {
+            // Calculate the proportion of time that should have elapsed by this point
+            // This ensures the countdown is evenly distributed across the total time
+            const proportion = (from - i) / from;
+            const timeToShow = Math.round(proportion * totalCountdownTime);
+            
             const timer = setTimeout(() => {
                 updateNumberCue(i);
-            }, (from - i) * interval);
+            }, timeToShow);
             countdownTimers.push(timer);
-        }
-        if (!addZero) {
-            // If not adding zero, remove the last timer
-            countdownTimers.pop();
         }
     }
     
