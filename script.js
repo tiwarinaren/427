@@ -123,6 +123,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let breathingInterval;
     let currentPhase = 'inhale';
     
+    // Breathing pattern variables (default 4-2-7)
+    let inhaleTime = 4;
+    let holdTime = 2;
+    let exhaleTime = 7;
+    
     // Display initial gratitude message
     displayRandomGratitude();
 
@@ -139,6 +144,20 @@ document.addEventListener('DOMContentLoaded', () => {
         audioIcon.textContent = '🔊';
         audioText.textContent = 'Voice';
     }
+    
+    // Check for saved breathing pattern
+    const savedInhaleTime = localStorage.getItem('breathenInhaleTime');
+    const savedHoldTime = localStorage.getItem('breathenHoldTime');
+    const savedExhaleTime = localStorage.getItem('breathenExhaleTime');
+    
+    if (savedInhaleTime) inhaleTime = parseInt(savedInhaleTime);
+    if (savedHoldTime) holdTime = parseInt(savedHoldTime);
+    if (savedExhaleTime) exhaleTime = parseInt(savedExhaleTime);
+    
+    // Update input fields with saved values
+    document.getElementById('inhaleTime').value = inhaleTime;
+    document.getElementById('holdTime').value = holdTime;
+    document.getElementById('exhaleTime').value = exhaleTime;
     
     // Toggle between light and dark mode
     toggleThemeBtn.addEventListener('click', () => {
@@ -228,6 +247,75 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
+    // Settings panel functionality
+    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsPanel = document.getElementById('settingsPanel');
+    const saveSettingsBtn = document.getElementById('saveSettings');
+    
+    // Toggle settings panel visibility
+    settingsBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent click from reaching document
+        settingsPanel.classList.toggle('visible');
+    });
+    
+    // Close settings panel when clicking outside
+    document.addEventListener('click', (e) => {
+        if (settingsPanel.classList.contains('visible') && 
+            !settingsPanel.contains(e.target) && 
+            e.target !== settingsBtn) {
+            settingsPanel.classList.remove('visible');
+        }
+    });
+    
+    // Prevent clicks inside panel from closing it
+    settingsPanel.addEventListener('click', (e) => {
+        e.stopPropagation();
+    });
+    
+    // Save settings
+    saveSettingsBtn.addEventListener('click', () => {
+        // Get values from inputs
+        const newInhaleTime = parseInt(document.getElementById('inhaleTime').value);
+        const newHoldTime = parseInt(document.getElementById('holdTime').value);
+        const newExhaleTime = parseInt(document.getElementById('exhaleTime').value);
+        
+        // Validate inputs (ensure they're within reasonable ranges)
+        if (newInhaleTime >= 1 && newInhaleTime <= 10 &&
+            newHoldTime >= 1 && newHoldTime <= 10 &&
+            newExhaleTime >= 1 && newExhaleTime <= 10) {
+            
+            // Update breathing pattern variables
+            inhaleTime = newInhaleTime;
+            holdTime = newHoldTime;
+            exhaleTime = newExhaleTime;
+            
+            // Save to localStorage
+            localStorage.setItem('breathenInhaleTime', inhaleTime);
+            localStorage.setItem('breathenHoldTime', holdTime);
+            localStorage.setItem('breathenExhaleTime', exhaleTime);
+            
+            // Close settings panel
+            settingsPanel.classList.remove('visible');
+            
+            // Show confirmation
+            const confirmationToast = document.createElement('div');
+            confirmationToast.className = 'confirmation-toast';
+            confirmationToast.textContent = 'Settings saved!';
+            document.body.appendChild(confirmationToast);
+            
+            // Remove confirmation after animation
+            setTimeout(() => {
+                confirmationToast.classList.add('show');
+                setTimeout(() => {
+                    confirmationToast.classList.remove('show');
+                    setTimeout(() => {
+                        document.body.removeChild(confirmationToast);
+                    }, 300);
+                }, 2000);
+            }, 10);
+        }
+    });
+    
     // --- Robust Play Function ---
     function playAudio(phase) {
         let audioToPlay;
@@ -288,6 +376,12 @@ document.addEventListener('DOMContentLoaded', () => {
         // Request wake lock to keep screen on during breathing exercise
         requestWakeLock();
         
+        // Calculate total cycle time based on current settings
+        const inhaleDuration = inhaleTime + 1; // +1 for the extra second
+        const holdDuration = holdTime + 1; // +1 for the extra second
+        const exhaleDuration = exhaleTime + 1; // +1 for the extra second
+        const totalCycleTime = (inhaleDuration + holdDuration + exhaleDuration) * 1000;
+        
         // Start the sequence after the specified delay
         setTimeout(() => {
             startOverlay.style.opacity = '0';
@@ -295,7 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 startOverlay.style.display = 'none';
                 displayRandomGratitude(); // Refresh gratitude for next session
                 breathingCycle();
-                breathingInterval = setInterval(breathingCycle, 16000); // 5s inhale + 3s hold + 8s exhale = 16s
+                breathingInterval = setInterval(breathingCycle, totalCycleTime);
             }, 500);
         }, initialDelay);
     }
@@ -303,15 +397,34 @@ document.addEventListener('DOMContentLoaded', () => {
     // Handle a single breathing cycle
     function breathingCycle() {
         clearAllCountdowns();
-        // Inhale phase - 4 seconds + 1 extra (5s)
+        
+        // Calculate durations with the extra second
+        const inhaleDuration = inhaleTime + 1; // +1 for the extra second
+        const holdDuration = holdTime + 1; // +1 for the extra second
+        const exhaleDuration = exhaleTime + 1; // +1 for the extra second
+        
+        // Update CSS animations to match the current durations
+        document.documentElement.style.setProperty('--inhale-duration', `${inhaleTime}s`);
+        document.documentElement.style.setProperty('--hold-duration', `${holdTime}s`);
+        document.documentElement.style.setProperty('--exhale-duration', `${exhaleTime}s`);
+        
+        // Update animation classes to force them to re-apply
+        const breathingCircleElement = document.querySelector('.circle-inner');
+        if (breathingCircleElement) {
+            breathingCircleElement.style.animation = 'none';
+            breathingCircleElement.offsetHeight; // Trigger reflow
+        }
+        
+        // Inhale phase
         currentPhase = 'inhale';
         instruction.textContent = 'Inhale';
         instruction.classList.add('animate__animated', 'animate__fadeIn');
         breathingCircle.classList.remove('exhale', 'hold');
         breathingCircle.classList.add('inhale');
-        startCountdown(4, 1000, true);
+        startCountdown(inhaleTime, 1000, true);
         playAudio('inhale');
-        // Hold phase - after 5 seconds (4+1), for 2+1 seconds (3s)
+        
+        // Hold phase - after inhale duration
         setTimeout(() => {
             currentPhase = 'hold';
             instruction.textContent = 'Hold';
@@ -319,10 +432,11 @@ document.addEventListener('DOMContentLoaded', () => {
             instruction.classList.add('animate__pulse');
             breathingCircle.classList.remove('inhale');
             breathingCircle.classList.add('hold');
-            startCountdown(2, 1000, true);
+            startCountdown(holdTime, 1000, true);
             playAudio('hold');
-        }, 5000);
-        // Exhale phase - after 8 seconds (5+3), for 7+1 seconds (8s)
+        }, inhaleDuration * 1000);
+        
+        // Exhale phase - after inhale + hold duration
         setTimeout(() => {
             currentPhase = 'exhale';
             instruction.textContent = 'Exhale';
@@ -330,9 +444,9 @@ document.addEventListener('DOMContentLoaded', () => {
             instruction.classList.add('animate__fadeIn');
             breathingCircle.classList.remove('hold');
             breathingCircle.classList.add('exhale');
-            startCountdown(7, 1000, true); // 7,6,5,4,3,2,1,0
+            startCountdown(exhaleTime, 1000, true);
             playAudio('exhale');
-        }, 8000);
+        }, (inhaleDuration + holdDuration) * 1000);
     }
     
     // Array to store all countdown timers
