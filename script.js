@@ -76,6 +76,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const numberCue = document.getElementById('numberCue');
     const gratitudeMessage = document.getElementById('gratitudeMessage');
     
+    // Initialize particles with directions radiating from center
+    const particles = document.querySelectorAll('.particle');
+    particles.forEach((particle, index) => {
+        // Get the class name to extract position information
+        const className = particle.className;
+        const pNumber = parseInt(className.match(/p(\d+)/)[1]);
+        
+        // Calculate angle based on particle number (distribute evenly around the circle)
+        const angle = (pNumber / particles.length) * Math.PI * 2;
+        
+        // Calculate direction vector (normalized between -1 and 1)
+        const translateX = Math.cos(angle).toFixed(2);
+        const translateY = Math.sin(angle).toFixed(2);
+        
+        // Add slight randomness to make it more natural
+        const randomX = ((Math.random() * 0.4) - 0.2).toFixed(2);
+        const randomY = ((Math.random() * 0.4) - 0.2).toFixed(2);
+        
+        // Set CSS variables for direction
+        particle.style.setProperty('--translate-x', parseFloat(translateX) + parseFloat(randomX));
+        particle.style.setProperty('--translate-y', parseFloat(translateY) + parseFloat(randomY));
+    });
+    
     // Audio elements
     const softbeepInhale = document.getElementById('softbeep_inhale');
     const softbeepHold = document.getElementById('softbeep_hold');
@@ -421,19 +444,32 @@ document.addEventListener('DOMContentLoaded', () => {
         document.documentElement.style.setProperty('--hold-duration', `${holdTime + animationAdjustment}s`);
         document.documentElement.style.setProperty('--exhale-duration', `${exhaleTime + animationAdjustment}s`);
         
-        // Update animation classes to force them to re-apply
+        // Get both circle elements
+        const breathingCircleOuter = document.querySelector('.breathing-circle');
         const breathingCircleElement = document.querySelector('.circle-inner');
+        
+        // Add active class to outer circle for pulsing effect
+        breathingCircleOuter.classList.add('active');
+        
+        // Reset animations to ensure they apply correctly
         if (breathingCircleElement) {
-            breathingCircleElement.style.animation = 'none';
-            breathingCircleElement.offsetHeight; // Trigger reflow
+            // Remove all animation classes
+            breathingCircleElement.classList.remove('inhale', 'hold', 'exhale');
+            
+            // Force a reflow to ensure animations restart properly
+            void breathingCircleElement.offsetWidth;
         }
         
         // Inhale phase
         currentPhase = 'inhale';
         instruction.textContent = 'Inhale';
         instruction.classList.add('animate__animated', 'animate__fadeIn');
-        breathingCircle.classList.remove('exhale', 'hold');
-        breathingCircle.classList.add('inhale');
+        
+        // Apply inhale animation with a slight delay to ensure it works
+        setTimeout(() => {
+            breathingCircleElement.classList.add('inhale');
+        }, 10);
+        
         startCountdown(inhaleTime, 1000);
         playAudio('inhale');
         
@@ -443,8 +479,12 @@ document.addEventListener('DOMContentLoaded', () => {
             instruction.textContent = 'Hold';
             instruction.classList.remove('animate__fadeIn');
             instruction.classList.add('animate__pulse');
-            breathingCircle.classList.remove('inhale');
-            breathingCircle.classList.add('hold');
+            
+            // Reset animation and apply hold
+            breathingCircleElement.classList.remove('inhale');
+            void breathingCircleElement.offsetWidth; // Force reflow
+            breathingCircleElement.classList.add('hold');
+            
             startCountdown(holdTime, 1000);
             playAudio('hold');
         }, inhaleDuration * 1000);
@@ -455,8 +495,12 @@ document.addEventListener('DOMContentLoaded', () => {
             instruction.textContent = 'Exhale';
             instruction.classList.remove('animate__pulse');
             instruction.classList.add('animate__fadeIn');
-            breathingCircle.classList.remove('hold');
-            breathingCircle.classList.add('exhale');
+            
+            // Reset animation and apply exhale
+            breathingCircleElement.classList.remove('hold');
+            void breathingCircleElement.offsetWidth; // Force reflow
+            breathingCircleElement.classList.add('exhale');
+            
             startCountdown(exhaleTime, 1000);
             playAudio('exhale');
         }, (inhaleDuration + holdDuration) * 1000);
